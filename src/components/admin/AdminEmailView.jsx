@@ -40,20 +40,52 @@ export default function AdminEmailView({ userId, active }) {
         if (!active) return;
         let cancelled = false;
         let timer;
+        let refreshing = false;
+        let refreshes = 0;
+        let hasPending = true;
+
         async function refresh() {
+            if (cancelled || refreshing || document.hidden || !hasPending || refreshes >= 6) return;
+            clearTimeout(timer);
+            refreshing = true;
+            refreshes++;
             try {
                 const { data, error: failure } = await supabase.functions.invoke(emailFunctionName, { body: { action: "status" } });
                 if (failure || !Array.isArray(data?.batches)) throw new Error("Status unavailable");
-                if (!cancelled) { setHistory(data.batches); setHistoryError(""); }
+                if (cancelled) return;
+                setHistory(data.batches);
+                setHistoryError("");
+                hasPending = data.batches.some((batch) =>
+                    (batch.admin_email_jobs ?? []).some((job) => ["pending", "processing"].includes(job.status))
+                );
             } catch {
-                if (!cancelled) setHistoryError("Could not refresh email activity. Queued messages will continue processing.");
+                hasPending = false;
+                if (!cancelled) setHistoryError("Could not refresh email activity. Queued messages will continue processing. Use Refresh activity to try again.");
             } finally {
-                if (!cancelled) timer = setTimeout(refresh, 10000);
+                refreshing = false;
+                // Bound polling even when jobs remain queued overnight.
+                if (!cancelled && !document.hidden && hasPending && refreshes < 6) {
+                    timer = setTimeout(refresh, 60000);
+                }
             }
         }
-        refresh();
-        return () => { cancelled = true; clearTimeout(timer); };
-    }, [active, historyRevision]);
+
+        function handleVisibilityChange() {
+            clearTimeout(timer);
+
+            if (!document.hidden && !refreshing && hasPending && refreshes < 6) {
+            void refresh();
+        }
+    }
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        void refresh();
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
+    }, [active, historyRevision, userId]);
 
     useEffect(() => {
         let cancelled = false;
@@ -199,6 +231,8 @@ export default function AdminEmailView({ userId, active }) {
         </form>
         <section className="content-card admin-email-history">
             <h3>Recent email activity</h3>
+            <button type="button" className="action-btn action-btn--outline" onClick={() => setHistoryRevision((value) => value + 1)}>Refresh activity</button>
+            <p>Activity refreshes once a minute for up to five minutes while messages are queued. Use Refresh activity to check again later.</p>
             <p>Messages are queued and sent one at a time. Accepted means the email provider accepted the request; it does not confirm inbox delivery.</p>
             {historyError && <p role="status">{historyError}</p>}
             {!history.length && !historyError && <p>No recent email submissions.</p>}
