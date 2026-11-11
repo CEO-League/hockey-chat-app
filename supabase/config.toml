@@ -3,3 +3,11 @@
 verify_jwt = false
 [functions.process-admin-email]
 verify_jwt = false
+
+# stream-token uses withSupabase user auth; stream-chat uses getUser; sync uses a private secret.
+[functions.stream-token]
+verify_jwt = false
+[functions.stream-chat]
+verify_jwt = false
+[functions.stream-sync]
+verify_jwt = false

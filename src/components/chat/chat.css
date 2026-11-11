@@ -1,0 +1,38 @@
+.hockey-chat-page {
+  display: flex; flex-direction: column; min-height: 0; height: 100%;
+  --str-chat__primary-color: var(--blue-600);
+  --str-chat__active-primary-color: var(--navy-800);
+  --str-chat__font-family: var(--font-family);
+  --str-chat__border-radius-circle: 50%;
+}
+.hockey-chat-workspace { display: flex; flex: 1; min-height: 400px; height: min(72vh, 900px); overflow: hidden; background: white; border: 1px solid var(--ice-200); border-radius: var(--radius-lg); }
+.hockey-conversations { width: 240px; flex-shrink: 0; overflow: auto; padding: 12px; border-right: 1px solid var(--ice-200); background: #f7fafc; }
+.hockey-conversations > .action-btn { width: 100%; margin-bottom: 12px; }
+.hockey-conversation { position: relative; display: flex; flex-direction: column; gap: 5px; width: 100%; padding: 12px 35px 12px 10px; border: 0; border-radius: var(--radius-md); text-align: left; background: transparent; color: var(--navy-900); cursor: pointer; overflow-wrap: anywhere; }
+.hockey-conversation:hover, .hockey-conversation.is-active { background: var(--ice-200); }
+.hockey-conversation small { color: var(--steel-500); }
+.hockey-conversation .hockey-chat-badge { position: absolute; right: 6px; top: 12px; }
+.hockey-conversation-panel { display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0; overflow: hidden; }
+.hockey-conversation-panel > .str-chat { flex: 1; min-height: 0; width: 100%; }
+.hockey-conversation-panel .str-chat__channel { display: flex; flex-direction: column; }
+.hockey-conversation-panel .str-chat__thread { width: 100%; max-width: none; min-height: 0; display: flex; flex-direction: column; flex: 1; }
+.hockey-conversation-panel .str-chat__list { flex: 1; min-height: 0; }
+.hockey-chat-placeholder { margin: auto; padding: 24px; text-align: center; color: var(--steel-500); }
+.hockey-chat-back { align-self: flex-start; margin: 6px 10px; }
+.hockey-chat-context { padding: 8px 14px; border-bottom: 1px solid var(--ice-200); background: var(--ice-100); font-size: var(--text-sm); }
+.hockey-chat-context summary { cursor: pointer; }
+.hockey-chat-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.hockey-chat-actions button { cursor: pointer; }
+.hockey-new-chat { padding: 18px; overflow: auto; }
+.hockey-new-chat > label { display: flex; flex-direction: column; gap: 6px; margin: 12px 0; }
+.hockey-new-chat input:not([type=checkbox]), .hockey-new-chat select { padding: 10px; border: 1px solid var(--ice-200); border-radius: var(--radius-md); font: inherit; }
+.hockey-people-list { max-height: 240px; overflow: auto; margin-bottom: 16px; }
+.hockey-people-list label { display: flex; gap: 10px; align-items: center; padding: 10px 4px; }
+.hockey-chat-page button:focus-visible, .hockey-chat-page input:focus-visible { outline: 2px solid var(--blue-600); outline-offset: 2px; }
+@media (max-width: 800px) {
+  .hockey-chat-workspace { height: calc(100dvh - 180px); min-height: 320px; }
+  .hockey-conversations { width: 100%; border-right: 0; }
+  .hockey-chat-workspace:not(.has-selection) .hockey-conversation-panel { display: none; }
+  .hockey-chat-workspace.has-selection .hockey-conversations { display: none; }
+  .hockey-conversation-panel { width: 100%; }
+}

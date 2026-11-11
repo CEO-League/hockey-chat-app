@@ -1,5 +1,8 @@
 import { attachSparePlayers, findViewingTeam } from "./utils/teamHelpers.js";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
+import StreamSessionProvider from "./components/chat/StreamSessionProvider";
+import ChatUnreadBadge from "./components/chat/ChatUnreadBadge";
+const StreamChatPage = lazy(() => import("./components/chat/ChatPage"));
 import { supabase } from "./lib/supabaseClient";
 import { loadAuthenticatedProfile } from "./lib/authHelpers.js";
 import { downloadScheduleIcs } from "./utils/calendarExport.js";
@@ -493,7 +496,7 @@ function App() {
     const [selectedTeam, setSelectedTeam] = useState(null);
     const [editingPlayer, setEditingPlayer] = useState(false);
     const [selectedPlayer, setSelectedPlayer] = useState(null);
-    const [activeChatId, setActiveChatId] = useState(null);
+
     const [userRsvp, setUserRsvp] = useState("pending");
     const [subRequested, setSubRequested] = useState(false);
     const [teamAttendance, setTeamAttendance] = useState({
@@ -507,8 +510,8 @@ function App() {
     const [mobileAttendanceByGame, setMobileAttendanceByGame] = useState({});
     const [mobileRsvpsByProfileByGame, setMobileRsvpsByProfileByGame] = useState({})
 
-    const [chatMessages, setChatMessages] = useState({});
-    const [chats, setChats] = useState([]);
+
+
     const [chatDraft, setChatDraft] = useState("");
     const [expandedFeedId, setExpandedFeedId] = useState(null);
     const [expandedNoticeId, setExpandedNoticeId] = useState(null);
@@ -1519,19 +1522,6 @@ function App() {
         }
     }
 
-    const sendChatMessage = () => {
-        const text = chatDraft.trim();
-        if (!text) return;
-        setChatMessages((prev) => ({
-            ...prev,
-            [activeChatId]: [
-                ...(prev[activeChatId] ?? []),
-                { id: `msg-${Date.now()}`, text, type: "outgoing" },
-            ],
-        }));
-        setChatDraft("");
-    };
-
     // League feed functions
 
     async function loadLeagueFeed(leagueName) {
@@ -1852,42 +1842,15 @@ function App() {
 
             case "chat":
                 return (
-                    <ChatView
-                        chats={chats}
-                        activeChatId={activeChatId}
-                        onSelectChat={setActiveChatId}
-                        messages={
-                            activeChatId
-                                ? chatMessages[activeChatId] ?? []
-                                : []
-                        }
-                        draft={chatDraft}
-                        onDraftChange={setChatDraft}
-                        onSend={sendChatMessage}
-                        gameContext={gameContext}
-                        onRequestSub={() => {
-                            setSubRequested(true)
-                            setChatDraft(
-                                getChatPrefill("sub", gameContext)
-                            )
-                        }}
-                        onAskGoalie={() =>
-                            setChatDraft(
-                                getChatPrefill("goalie", gameContext)
-                            )
-                        }
-                        onMessageGame={() =>
-                            setChatDraft(
-                                getChatPrefill("game", gameContext)
-                            )
-                        }
-                        onPromptNoResponse={() =>
-                            setChatDraft(
-                                getChatPrefill("prompt", gameContext)
-                            )
-                        }
-                    />
-                )
+                    <Suspense fallback={<p role="status">Loading chat?</p>}>
+                        <StreamChatPage active={activeView === "chat"} draft={chatDraft}
+                            onDraftChange={setChatDraft} gameContext={gameContext}
+                            onQuickAction={(kind) => {
+                                if (kind === "sub") setSubRequested(true);
+                                setChatDraft(getChatPrefill(kind, gameContext));
+                            }} />
+                    </Suspense>
+                );
 
             case "manage-rsvps":
                 if (!canManageRsvps) return null;
@@ -1941,6 +1904,7 @@ function App() {
     }
 
     return (
+        <StreamSessionProvider userId={session.user.id}>
         <div className="app-layout">
             {leagueTicker && (
                 <div className="league-ticker-bar">
@@ -2017,7 +1981,7 @@ function App() {
                             className={`sidebar-link${activeView === item.id ? " is-active" : ""}`}
                             onClick={() => navigateTo(item.id)}
                         >
-                            {item.label}
+                            {item.label}{item.id === "chat" && <ChatUnreadBadge />}
                         </button>
                     ))}
 
@@ -2082,7 +2046,7 @@ function App() {
                     ))}
                 </main>
 
-                {!(activeView === "teams" && selectedPlayer) && (
+                {activeView !== "chat" && !(activeView === "teams" && selectedPlayer) && (
                     <TonightsRoster
                     game={upcomingGame}
                     myTeam={myTeam}
@@ -2092,6 +2056,7 @@ function App() {
                 )}
             </div>
         </div>
+        </StreamSessionProvider>
     );
 }
 
@@ -3636,119 +3601,6 @@ function NoticesView({
                 expandedId={expandedFeedId}
                 onToggle={onToggleFeed}
             />
-        </div>
-    );
-}
-
-function ChatView({
-    chats = [],
-    activeChatId,
-    onSelectChat,
-    messages,
-    draft,
-    onDraftChange,
-    onSend,
-    gameContext,
-    onRequestSub,
-    onAskGoalie,
-    onMessageGame,
-    onPromptNoResponse,
-}) {
-
-    const chat =
-        chats.find((item) => item.id === activeChatId) ??
-        chats[0] ??
-        null
-
-    if (!chat) {
-        return (
-            <div className="page-view chat-view">
-                <header className="page-header">
-                    <h2>Chat</h2>
-                    <p className="page-subtitle">
-                        Team and league conversations
-                    </p>
-                </header>
-
-                <section className="content-card">
-                    <p className="empty-state">
-                        No chat channels are available yet.
-                    </p>
-                </section>
-            </div>
-        )
-    }
-
-    const handleKeyDown = (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            onSend();
-        }
-    };
-
-    return (
-        <div className="page-view chat-page">
-            <div className="chat-workspace">
-                <aside className="chat-channels">
-                    <header className="chat-channels-header">Channels</header>
-                    {chats.length === 0 ? (
-                        <p className="empty-state">No chat channels yet.</p>
-                    ) : (
-                        chats.map((ch) => (
-                            <button
-                                key={ch.id}
-                                type="button"
-                                className={`chat-channel${ch.id === activeChatId ? " is-active" : ""}`}
-                                onClick={() => onSelectChat(ch.id)}
-                            >
-                                #{ch.name}
-                            </button>
-                        ))
-                    )}
-                </aside>
-                <div className="chat-main">
-                    <header className="chat-main-header"><h2>#{chat.name}</h2></header>
-                    <div className="chat-messages">
-                        {gameContext && (
-                            <section className="chat-context-card">
-                                <h4>Game context</h4>
-                                <p><strong>{gameContext.matchup}</strong> · {gameContext.date} · {gameContext.time}</p>
-                                <p>{gameContext.rink} · {gameContext.skatersGoing} skaters · {gameContext.goalieStatus} · {gameContext.subStatus}</p>
-                                <div className="chat-quick-links">
-                                    <button type="button" className="action-btn action-btn--ghost action-btn--sm" onClick={onMessageGame}>Message about next game</button>
-                                    <button type="button" className="action-btn action-btn--ghost action-btn--sm" onClick={onRequestSub}>Request sub</button>
-                                    {gameContext.noResponse > 0 && (
-                                        <button type="button" className="action-btn action-btn--ghost action-btn--sm" onClick={onPromptNoResponse}>Prompt no response</button>
-                                    )}
-                                    {!gameContext.goalieOk && (
-                                        <button type="button" className="action-btn action-btn--ghost action-btn--sm" onClick={onAskGoalie}>Ask for goalie</button>
-                                    )}
-                                </div>
-                            </section>
-                        )}
-                        {messages.length === 0 ? (
-                            <p className="chat-empty-text">No messages yet. Use quick actions above or type below.</p>
-                        ) : (
-                            messages.map((message) => (
-                                <div key={message.id} className={`chat-bubble chat-bubble--${message.type ?? "incoming"}`}>
-                                    {message.text}
-                                </div>
-                            ))
-                        )}
-                    </div>
-                    <div className="chat-composer">
-                        <input
-                            className="chat-input"
-                            type="text"
-                            placeholder={`Message #${chat.name}`}
-                            value={draft}
-                            onChange={(e) => onDraftChange(e.target.value)}
-                            onKeyDown={handleKeyDown}
-                        />
-                        <button type="button" className="action-btn action-btn--primary" onClick={onSend}>Send</button>
-                    </div>
-                </div>
-            </div>
         </div>
     );
 }

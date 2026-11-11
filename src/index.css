@@ -5161,3 +5161,6 @@ button {
 .admin-email-team-heading h3 { margin: 0; font-size: 1rem; overflow-wrap: anywhere; }
 .admin-email-team-heading span { font-size: var(--text-xs); color: var(--steel-500); }
 .admin-email-team > .admin-email-person { padding-left: 12px; padding-right: 12px; }
+
+/* Stream unread badge is visible before the lazy chat stylesheet loads. */
+.hockey-chat-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; padding: 2px 6px; margin-left: 7px; border-radius: 999px; background: var(--blue-600); color: white; font-size: 11px; font-weight: 700; }
