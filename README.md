@@ -83,3 +83,4 @@ Admin email delivery uses a durable queue with shared pacing, retries, idempoten
 submission, and a per-admin cooldown. See [deployment instructions](supabase/ADMIN_EMAIL_SETUP.md)
 for the migration, updated functions, worker secret, and scheduler. These server
 changes must be deployed before queue protections are active.
+
