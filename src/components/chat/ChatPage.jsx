@@ -112,7 +112,7 @@ function Workspace({ client, userId, active, draft, onDraftChange, gameContext, 
           {creating ? <NewConversation userId={userId} onCreated={created} onCancel={() => setCreating(false)} />
             : selected && active ? <Channel channel={selected}>
               {thread ? <Thread thread={thread}>
-                <ThreadHeader /><MessageList /><MessageComposer />
+                <ThreadHeader /><MessageList hideDeletedMessages /><MessageComposer />
               </Thread> : <>
                 <ChannelHeader title={conversationName(selected, userId)} />
                 {draft && <p className="hockey-chat-context">Your game message is ready.</p>}
@@ -126,7 +126,7 @@ function Workspace({ client, userId, active, draft, onDraftChange, gameContext, 
                     <button onClick={() => onQuickAction('prompt')}>Prompt replies</button>
                   </div>
                 </details>}
-                <MessageList /><MessageComposer />
+                <MessageList hideDeletedMessages /><MessageComposer />
               </>}
             </Channel> : <div className="hockey-chat-placeholder">
               <h3>Your hockey conversations</h3>

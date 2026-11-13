@@ -1,12 +1,12 @@
 import { attachSparePlayers, findViewingTeam } from "./utils/teamHelpers.js";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import StreamSessionProvider from "./components/chat/StreamSessionProvider";
 import ChatUnreadBadge from "./components/chat/ChatUnreadBadge";
 const StreamChatPage = lazy(() => import("./components/chat/ChatPage"));
 import { supabase } from "./lib/supabaseClient";
 import { loadAuthenticatedProfile } from "./lib/authHelpers.js";
 import { downloadScheduleIcs } from "./utils/calendarExport.js";
-import { IconCheck, IconX, IconChevronDown, IconChevronRight } from "@tabler/icons-react";
+import { IconCheck, IconX, IconChevronDown, IconChevronRight, IconChevronLeft, IconClipboardList } from "@tabler/icons-react";
 import HockeyIcon from "./components/HockeyIcon.jsx";
 import NextGameBanner from "./components/NextGameBanner.jsx";
 import {
@@ -45,6 +45,7 @@ import AdminNoticeView from './components/admin/AdminNoticeView';
 import AdminEmailView from './components/admin/AdminEmailView';
 import { manageableTeams } from "./utils/rsvpManagement.js";
 import RsvpManagement from "./components/RsvpManagement.jsx";
+import GameLines from "./components/GameLines.jsx";
 import SavedTab from './components/SavedTab';
 
 
@@ -224,6 +225,8 @@ function TonightsRoster({ game, myTeam, rsvpsByProfile = {}, onPromptPlayers }) 
 }
 
 function GameDetailModal({
+    onOpenLines,
+    initialTeamId,
     access,
     onRsvpSaved,
     game,
@@ -231,6 +234,15 @@ function GameDetailModal({
     onMessageTeam,
     onRequestSub,
 }) {
+    const [detailTab, setDetailTab] = useState('details');
+    const [linesDirty, setLinesDirty] = useState(false);
+    const [linesSaving, setLinesSaving] = useState(false);
+    function leaveLines(action) {
+        if (linesSaving) return;
+        if (linesDirty && !window.confirm('Discard your unsaved line changes?')) return;
+        setLinesDirty(false);
+        action();
+    }
     const home = game.home_team_name ?? "TBD";
     const away = game.away_team_name ?? "TBD";
     const date = formatGameDate(game.game_date);
@@ -370,15 +382,30 @@ function GameDetailModal({
                         {home} vs {away}
                     </h3>
 
+                    <div className="game-detail-header-actions">
+                    <button type="button" className="game-detail-mobile-lines game-lines-icon-button"
+                        aria-label="Lines" title="View game lines" onClick={() => leaveLines(onOpenLines)}>
+                        <IconClipboardList size={23} aria-hidden="true" />
+                    </button>
                     <button
                         type="button"
                         className="modal-close"
-                        onClick={onClose}
+                        onClick={() => leaveLines(onClose)}
                     >
                         Close
                     </button>
+                    </div>
                 </header>
 
+                <div className="game-detail-tabs" role="tablist" aria-label="Game details">
+                    <button type="button" role="tab" id="game-details-tab" aria-controls="game-details-panel" aria-selected={detailTab === 'details'}
+                        onClick={() => leaveLines(() => setDetailTab('details'))}>Details</button>
+                    <button type="button" role="tab" id="game-lines-tab" aria-controls="game-lines-panel" aria-selected={detailTab === 'lines'}
+                        onClick={() => setDetailTab('lines')}><IconClipboardList size={19} aria-hidden="true" /><span>Lines</span></button>
+                </div>
+                {detailTab === 'lines' ? <div role="tabpanel" id="game-lines-panel" aria-labelledby="game-lines-tab">
+                    <GameLines game={game} access={access} initialTeamId={initialTeamId} onDirtyChange={setLinesDirty} onBusyChange={setLinesSaving} />
+                </div> : <div role="tabpanel" id="game-details-panel" aria-labelledby="game-details-tab">
                 <div className="game-detail-list">
                     <div>
                         <span>Date</span>
@@ -463,11 +490,12 @@ function GameDetailModal({
                     )}
                 </section>
 
+                </div>}
                 <footer className="modal-actions">
                     <button
                         type="button"
                         className="action-btn action-btn--primary"
-                        onClick={onMessageTeam}
+                        onClick={() => leaveLines(onMessageTeam)}
                     >
                         Message Team
                     </button>
@@ -475,7 +503,7 @@ function GameDetailModal({
                     <button
                         type="button"
                         className="action-btn action-btn--secondary"
-                        onClick={onRequestSub}
+                        onClick={() => leaveLines(onRequestSub)}
                     >
                         Request Sub
                     </button>
@@ -2174,6 +2202,7 @@ function GameRosterModal({
                         </h2>
                     </div>
 
+
                     <button
                         type="button"
                         className="modal-close"
@@ -2578,6 +2607,16 @@ function ScheduleView({
 }) {
     const [games, setGames] = useState([])
     const [detailGame, setDetailGame] = useState(requestedDetailGame);
+    const [linesGame, setLinesGame] = useState(null);
+    const [mobileLinesDirty, setMobileLinesDirty] = useState(false);
+    const [mobileLinesSaving, setMobileLinesSaving] = useState(false);
+    const linesHeading = useRef(null);
+    useEffect(() => {
+        if (linesGame) {
+            linesHeading.current?.focus();
+            linesHeading.current?.scrollIntoView({ block: 'start' });
+        }
+    }, [linesGame]);
     const [rsvpGameId, setRsvpGameId] = useState(null);
     const [calendarDate, setCalendarDate] = useState(() => {
         if (!requestedDetailGame?.game_date) return new Date();
@@ -2592,6 +2631,8 @@ function ScheduleView({
         setLastDetailRequest(requestedDetailGame);
         if (requestedDetailGame) {
             setDetailGame(requestedDetailGame);
+            setLinesGame(null);
+            setMobileLinesDirty(false);
             setRsvpGameId(null);
             const [year, month, day] = requestedDetailGame.game_date.split("-").map(Number);
             setCalendarDate(new Date(year, month - 1, day));
@@ -2653,6 +2694,21 @@ function ScheduleView({
         loadGames();
         return () => { cancelled = true; };
     }, [myTeam?.id]);
+
+    if (linesGame) return <div className="page-view game-lines-page">
+        <header className="game-lines-mobile-header">
+        <button type="button" className="game-lines-icon-button" aria-label="Back to game details" title="Back to game details" onClick={() => {
+            if (mobileLinesSaving) return;
+            if (mobileLinesDirty && !window.confirm('Discard your unsaved line changes?')) return;
+            setMobileLinesDirty(false); setLinesGame(null);
+        }}><IconChevronLeft size={24} aria-hidden="true" /></button>
+        <div><h2 ref={linesHeading} tabIndex={-1}>Game lines</h2>
+            <p className="page-subtitle">{linesGame.home_team_name} vs {linesGame.away_team_name}</p>
+            <p>{formatGameDate(linesGame.game_date)} · {formatGameTime(linesGame.start_time)}</p>
+        </div></header>
+        <div className="content-card"><GameLines key={linesGame.id} game={linesGame} access={access}
+            initialTeamId={currentTeamId} onDirtyChange={setMobileLinesDirty} onBusyChange={setMobileLinesSaving} /></div>
+    </div>;
 
     // Desktop version of Schedule - Calendar
 
@@ -3035,6 +3091,8 @@ function ScheduleView({
 
             {detailGame && (
                 <GameDetailModal
+                    initialTeamId={currentTeamId}
+                    onOpenLines={() => setLinesGame(detailGame)}
                     access={access}
                     onRsvpSaved={onRsvpSaved}
                     game={detailGame}
