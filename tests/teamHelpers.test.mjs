@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { attachSparePlayers, findViewingTeam } from './teamHelpers.js'
+import { attachSparePlayers, findViewingTeam } from '../src/utils/teamHelpers.js'
 
 const player = { id: 'player', full_name: 'Pat' }
 const teams = [

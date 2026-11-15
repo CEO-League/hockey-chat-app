@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { credentialsFor, invokeChat, startChatSession } from './streamAuth.js';
+import { credentialsFor, invokeChat, startChatSession } from '../src/lib/streamAuth.js';
 
 const session = (id = 'user-a', access_token = 'supabase-token') => ({ user: { id }, access_token, expires_at: Date.now() / 1000 + 3600 });
 const wireCredentials = () => ({ apiKey: 'public-key', userId: 'user-a', token: 'signed-token' });

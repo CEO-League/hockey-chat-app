@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { CHANNEL_GRANTS, MEMBER_GRANTS, TEAM_TYPE, requireProfile, privateRequest,
-  tokenClaims, membershipChanges, stableId, assertPrivateGrants } from './streamPolicy.mjs';
-import { createPrivateConversation, issueToken, reconcileTeam } from './streamService.mjs';
+  tokenClaims, membershipChanges, stableId, assertPrivateGrants } from '../supabase/functions/_shared/streamPolicy.mjs';
+import { createPrivateConversation, issueToken, reconcileTeam } from '../supabase/functions/_shared/streamService.mjs';
 const alice = { id: 1, auth_user_id: 'alice', full_name: 'Alice', is_system_account: false };
 const bob = { id: 2, auth_user_id: 'bob', full_name: 'Bob', is_system_account: false };
 const carol = { id: 3, auth_user_id: 'carol', full_name: 'Carol', is_system_account: false };

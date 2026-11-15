@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { emptyGameLines } from '../../src/utils/gameLines.js';
+import { emptyGameLines } from '../src/utils/gameLines.js';
 
 const users = { captain: '00000000-0000-0000-0000-000000000001',
     player: '00000000-0000-0000-0000-000000000002',
@@ -36,7 +36,7 @@ test('game lines enforce database permissions, validation, isolation, and versio
             insert into team_members values (1, 100), (1, 101), (2, 102);
             insert into team_captains values (1, 100);
         `);
-        await db.exec(await readFile(new URL('../migrations/20261112000000_game_lines.sql', import.meta.url), 'utf8'));
+        await db.exec(await readFile(new URL('../supabase/migrations/20261112000000_game_lines.sql', import.meta.url), 'utf8'));
         const asUser = async (id, role = 'authenticated') => {
             await db.exec('reset role');
             await db.query("select set_config('request.jwt.claim.sub', $1, false)", [id ?? '']);

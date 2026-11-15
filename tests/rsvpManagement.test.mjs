@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { manageableTeams, gamesForManagedTeam } from './rsvpManagement.js';
+import { manageableTeams, gamesForManagedTeam } from '../src/utils/rsvpManagement.js';
 const teams = [{ id: 1 }, { id: 2 }];
 test('ordinary players and missing permissions cannot manage teams', () => {
     assert.deepEqual(manageableTeams(teams, null), []);

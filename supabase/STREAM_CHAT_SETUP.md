@@ -99,7 +99,7 @@ on sync; existing private memberships require an explicit account-offboarding po
 
 ## Verification
 
-Local: node --test src/lib/*.test.mjs src/utils/*.test.mjs supabase/functions/_shared/*.test.mjs
+Local: npm test
 and npm run build. Edge type checks use Deno check on all three function entrypoints.
 
 Before rollout, use two player accounts and one outsider:

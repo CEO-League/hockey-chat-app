@@ -1,7 +1,7 @@
 ﻿import test from 'node:test';
 import assert from 'node:assert/strict';
-import { emailRequestId, sendAdminEmail } from './adminEmail.js';
-import { deliveryOutcome, retryDelay } from '../../supabase/functions/_shared/emailRetry.mjs';
+import { emailRequestId, sendAdminEmail } from '../src/lib/adminEmail.js';
+import { deliveryOutcome, retryDelay } from '../supabase/functions/_shared/emailRetry.mjs';
 
 const requestId = 'd66f290b-d06a-4bde-9d52-de04aa218dbe';
 const payload = { recipients: [' A@example.com ', 'a@example.com', 'b@example.com'], subject: ' Notice ', message: ' Hello ', requestId };

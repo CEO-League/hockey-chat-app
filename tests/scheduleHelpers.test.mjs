@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { filterUpcomingGamesForTeam, filterGamesForTeam, formatDateKey, formatGameDate, gameEndTime } from './scheduleHelpers.js';
+import { filterUpcomingGamesForTeam, filterGamesForTeam, formatDateKey, formatGameDate, gameEndTime } from '../src/utils/scheduleHelpers.js';
 
 const game = (id, date, time = '19:00:00', team = 'red') => ({
     id, game_date: date, start_time: time, home_team_id: team, away_team_id: 'blue',

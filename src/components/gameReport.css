@@ -1,0 +1,39 @@
+.game-report { padding: 20px; }
+.report-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.report-heading h4 { margin: 0; font-size: 19px; }
+.report-heading p, .report-summary > p:not(.report-score) { color: var(--steel-500); }
+.report-fields { min-width: 0; border: 0; padding: 0; margin: 16px 0; }
+.report-fields > legend { font-weight: 700; margin-bottom: 12px; }
+.report-result-fields, .report-penalty-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.game-report label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600; min-width: 0; }
+.game-report input, .game-report select, .game-report textarea { box-sizing: border-box; width: 100%; min-width: 0; padding: 10px; border: 1px solid var(--ice-200); border-radius: 8px; background: white; color: var(--navy-900); font: inherit; font-size: 16px; }
+.game-report textarea { resize: vertical; }
+.report-penalty { min-width: 0; margin: 16px 0; padding: 12px; border: 1px solid var(--ice-200); border-radius: 12px; }
+.report-penalty > button { margin-top: 12px; }
+.report-notes-field { margin-top: 20px; }
+.report-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.report-score { font-size: 24px; font-weight: 700; }
+.report-notes { white-space: pre-wrap; overflow-wrap: anywhere; }
+.report-penalty-list { padding-left: 20px; }
+.report-penalty-list li { margin: 12px 0; overflow-wrap: anywhere; }
+.report-penalty-list span { display: block; margin-top: 4px; }
+.report-history { border-top: 1px solid var(--ice-200); margin-top: 20px; padding-top: 16px; }
+.report-history details { margin-top: 12px; padding: 12px; border: 1px solid var(--ice-200); border-radius: 8px; }
+.report-history summary { cursor: pointer; overflow-wrap: anywhere; }
+.schedule-history-switch { display: flex; gap: 8px; margin-bottom: 16px; }
+.schedule-history-switch button[aria-pressed="true"] { background: var(--navy-900); color: white; }
+.past-games ul { list-style: none; padding: 0; }
+.past-games li + li { border-top: 1px solid var(--ice-200); }
+.past-games li button { display: grid; gap: 6px; width: 100%; padding: 16px 8px; text-align: left; border: 0; background: transparent; color: var(--navy-900); font: inherit; cursor: pointer; overflow-wrap: anywhere; }
+.game-report :is(button, input, select, textarea, summary):focus-visible, .past-games button:focus-visible { outline: 3px solid var(--blue-600); outline-offset: 3px; }
+@media (max-width: 768px) {
+    .game-detail-modal .game-detail-tabs { display: flex; padding: 0 14px 12px; gap: 6px; }
+    .game-detail-modal .game-detail-tabs button { flex: 1; justify-content: center; padding: 10px 6px; font-size: 13px; min-height: 44px; }
+    .game-detail-modal .game-detail-tabs button svg { display: none; }
+    .game-report { padding: 14px; }
+    .report-result-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .report-result-fields > label:last-child { grid-column: 1 / -1; }
+    .report-penalty-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .report-penalty-fields > label:nth-child(3) { grid-column: 1 / -1; }
+    .report-actions button { flex: 1; min-height: 44px; }
+}

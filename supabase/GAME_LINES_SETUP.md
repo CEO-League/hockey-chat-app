@@ -8,8 +8,8 @@ Editors select rostered players for LW/C/RW, LD/RD, and goalie positions. Start 
 
 Validation:
 
-- `node --test src/utils/gameLines.test.mjs src/utils/rsvpManagement.test.mjs src/utils/scheduleHelpers.test.mjs`
+- `node --test tests/gameLines.test.mjs tests/rsvpManagement.test.mjs tests/scheduleHelpers.test.mjs`
 - `npm run build`
-- `supabase/tests/game_lines.test.mjs` exercises the migration in an isolated PostgreSQL engine. Install `@electric-sql/pglite` in a temporary directory and set `PGLITE_MODULE` to the file URL of its `dist/index.js`, then run `node --test supabase/tests/game_lines.test.mjs`. It does not connect to production. Without this environment variable, the integration test is explicitly skipped.
+- `tests/game_lines.test.mjs` exercises the migration in an isolated PostgreSQL engine. Install `@electric-sql/pglite` in a temporary directory and set `PGLITE_MODULE` to the file URL of its `dist/index.js`, then run `node --test tests/game_lines.test.mjs`. It does not connect to production. Without this environment variable, the integration test is explicitly skipped.
 
 After applying the migration, verify with a captain, ordinary player, and admin account. Confirm saved lines persist after reopening, and that changing one team's lineup does not change the opponent's lineup or another game. The feature does not require a Stream configuration change.

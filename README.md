@@ -37,7 +37,7 @@ an existing main membership's ID and rejects ambiguous multiple main memberships
 It depends on the existing `is_league_admin()` function. Apply both migrations
 listed above when deploying these changes together.
 
-Verification: `node --test src/utils/teamHelpers.test.mjs` and `npm run build`.
+Verification: `node --test tests/teamHelpers.test.mjs` and `npm run build`.
 After applying the migration, check saving main/spare teams, reloading the profile,
 switching the viewing team, and removing a spare team. Confirm that one player
 cannot save another player's settings and that admins can edit players.
@@ -68,7 +68,7 @@ Managed RSVP writes validate the caller, current captain assignment, player team
 game teams, and status on every request. Existing self-RSVP policies are unchanged.
 No database migration has been applied by the code change itself.
 
-Run `node --test src/utils/*.test.mjs` and `npm run build`. In a staging database,
+Run `npm test` and `npm run build`. In a staging database,
 verify an admin can assign/revoke captains and change any rostered player's RSVP;
 a captain can update only their own team's game RSVPs; and ordinary players and
 anonymous callers cannot invoke either privileged write successfully. Also test
@@ -83,3 +83,10 @@ Admin email delivery uses a durable queue with shared pacing, retries, idempoten
 submission, and a per-admin cooldown. See [deployment instructions](supabase/ADMIN_EMAIL_SETUP.md)
 for the migration, updated functions, worker secret, and scheduler. These server
 changes must be deployed before queue protections are active.
+
+## Tests
+
+All automated tests live in the top-level `tests/` folder. Run `npm test`.
+The two database integration tests use an isolated PostgreSQL engine and
+are skipped unless `PGLITE_MODULE` points to the file URL of an installed
+`@electric-sql/pglite/dist/index.js`. They never connect to the live database.

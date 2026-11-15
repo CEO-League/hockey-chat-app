@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildScheduleIcs } from './calendarExport.js';
+import { buildScheduleIcs } from '../src/utils/calendarExport.js';
 
 test('calendar games last 60 minutes with missing or conflicting end times', () => {
     for (const end_time of [null, '22:00:00']) {

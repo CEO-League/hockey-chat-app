@@ -1,6 +1,6 @@
 ﻿import test from 'node:test';
 import assert from 'node:assert/strict';
-import { groupEmailRecipients } from './emailRecipients.js';
+import { groupEmailRecipients } from '../src/utils/emailRecipients.js';
 const profiles = [{ id: 'p1', full_name: 'Zoe', email: 'zoe@example.com' }, { id: 'p2', full_name: 'Alex', email: 'alex@example.com' }, { id: 'p3', full_name: 'No Team' }];
 const teams = [{ id: 2, name: 'Wolves' }, { id: 1, name: 'Bears' }, { id: 3, name: 'Hawks' }];
 const memberships = [{ team_id: '1', profile_id: 'p1' }, { team_id: 2, profile_id: 'p2' }, { team_id: 1, profile_id: 'p1' }];

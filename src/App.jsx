@@ -46,6 +46,8 @@ import AdminEmailView from './components/admin/AdminEmailView';
 import { manageableTeams } from "./utils/rsvpManagement.js";
 import RsvpManagement from "./components/RsvpManagement.jsx";
 import GameLines from "./components/GameLines.jsx";
+import GameReport from "./components/GameReport.jsx";
+import PastGames from "./components/PastGames.jsx";
 import SavedTab from './components/SavedTab';
 
 
@@ -225,6 +227,7 @@ function TonightsRoster({ game, myTeam, rsvpsByProfile = {}, onPromptPlayers }) 
 }
 
 function GameDetailModal({
+    onReportSaved,
     onOpenLines,
     initialTeamId,
     access,
@@ -234,13 +237,13 @@ function GameDetailModal({
     onMessageTeam,
     onRequestSub,
 }) {
-    const [detailTab, setDetailTab] = useState('details');
-    const [linesDirty, setLinesDirty] = useState(false);
-    const [linesSaving, setLinesSaving] = useState(false);
-    function leaveLines(action) {
-        if (linesSaving) return;
-        if (linesDirty && !window.confirm('Discard your unsaved line changes?')) return;
-        setLinesDirty(false);
+    const [detailTab, setDetailTab] = useState(game.openReport ? 'report' : 'details');
+    const [detailDirty, setDetailDirty] = useState(false);
+    const [detailSaving, setDetailSaving] = useState(false);
+    function leaveDetails(action) {
+        if (detailSaving) return;
+        if (detailDirty && !window.confirm('Discard your unsaved game changes?')) return;
+        setDetailDirty(false);
         action();
     }
     const home = game.home_team_name ?? "TBD";
@@ -383,14 +386,10 @@ function GameDetailModal({
                     </h3>
 
                     <div className="game-detail-header-actions">
-                    <button type="button" className="game-detail-mobile-lines game-lines-icon-button"
-                        aria-label="Lines" title="View game lines" onClick={() => leaveLines(onOpenLines)}>
-                        <IconClipboardList size={23} aria-hidden="true" />
-                    </button>
                     <button
                         type="button"
                         className="modal-close"
-                        onClick={() => leaveLines(onClose)}
+                        onClick={() => leaveDetails(onClose)}
                     >
                         Close
                     </button>
@@ -399,12 +398,16 @@ function GameDetailModal({
 
                 <div className="game-detail-tabs" role="tablist" aria-label="Game details">
                     <button type="button" role="tab" id="game-details-tab" aria-controls="game-details-panel" aria-selected={detailTab === 'details'}
-                        onClick={() => leaveLines(() => setDetailTab('details'))}>Details</button>
+                        onClick={() => detailTab !== 'details' && leaveDetails(() => setDetailTab('details'))}>Details</button>
                     <button type="button" role="tab" id="game-lines-tab" aria-controls="game-lines-panel" aria-selected={detailTab === 'lines'}
-                        onClick={() => setDetailTab('lines')}><IconClipboardList size={19} aria-hidden="true" /><span>Lines</span></button>
+                        onClick={() => detailTab !== 'lines' && leaveDetails(() => window.matchMedia('(max-width: 768px)').matches ? onOpenLines() : setDetailTab('lines'))}><IconClipboardList size={19} aria-hidden="true" /><span>Lines</span></button>
+                    <button type="button" role="tab" id="game-report-tab" aria-controls="game-report-panel" aria-selected={detailTab === 'report'}
+                        onClick={() => detailTab !== 'report' && leaveDetails(() => setDetailTab('report'))}>Game Report</button>
                 </div>
-                {detailTab === 'lines' ? <div role="tabpanel" id="game-lines-panel" aria-labelledby="game-lines-tab">
-                    <GameLines game={game} access={access} initialTeamId={initialTeamId} onDirtyChange={setLinesDirty} onBusyChange={setLinesSaving} />
+                {detailTab === 'report' ? <div role="tabpanel" id="game-report-panel" aria-labelledby="game-report-tab">
+                    <GameReport game={game} access={access} onDirtyChange={setDetailDirty} onBusyChange={setDetailSaving} onSaved={onReportSaved} />
+                </div> : detailTab === 'lines' ? <div role="tabpanel" id="game-lines-panel" aria-labelledby="game-lines-tab">
+                    <GameLines game={game} access={access} initialTeamId={initialTeamId} onDirtyChange={setDetailDirty} onBusyChange={setDetailSaving} />
                 </div> : <div role="tabpanel" id="game-details-panel" aria-labelledby="game-details-tab">
                 <div className="game-detail-list">
                     <div>
@@ -495,7 +498,7 @@ function GameDetailModal({
                     <button
                         type="button"
                         className="action-btn action-btn--primary"
-                        onClick={() => leaveLines(onMessageTeam)}
+                        onClick={() => leaveDetails(onMessageTeam)}
                     >
                         Message Team
                     </button>
@@ -503,7 +506,7 @@ function GameDetailModal({
                     <button
                         type="button"
                         className="action-btn action-btn--secondary"
-                        onClick={() => leaveLines(onRequestSub)}
+                        onClick={() => leaveDetails(onRequestSub)}
                     >
                         Request Sub
                     </button>
@@ -2607,6 +2610,8 @@ function ScheduleView({
 }) {
     const [games, setGames] = useState([])
     const [detailGame, setDetailGame] = useState(requestedDetailGame);
+    const [scheduleMode, setScheduleMode] = useState('schedule');
+    const [reportRevision, setReportRevision] = useState(0);
     const [linesGame, setLinesGame] = useState(null);
     const [mobileLinesDirty, setMobileLinesDirty] = useState(false);
     const [mobileLinesSaving, setMobileLinesSaving] = useState(false);
@@ -2750,6 +2755,14 @@ function ScheduleView({
                     Export calendar (.ics)
                 </button>
             </header>
+            <nav className="schedule-history-switch" aria-label="Schedule view">
+                <button type="button" className="action-btn action-btn--secondary" aria-pressed={scheduleMode === 'schedule'}
+                    onClick={() => setScheduleMode('schedule')}>Schedule</button>
+                <button type="button" className="action-btn action-btn--secondary" aria-pressed={scheduleMode === 'past'}
+                    onClick={() => setScheduleMode('past')}>Past Games</button>
+            </nav>
+            {scheduleMode === 'past' ? <PastGames games={games} revision={reportRevision}
+                onSelect={game => setDetailGame({ ...game, openReport: true })} /> : <>
             <div className="desktop-schedule">
             <section className="content-card schedule-calendar">
                 <div className="schedule-calendar-toolbar">
@@ -3089,8 +3102,10 @@ function ScheduleView({
     </section>
     </div>
 
+            </>}
             {detailGame && (
                 <GameDetailModal
+                    onReportSaved={() => setReportRevision(value => value + 1)}
                     initialTeamId={currentTeamId}
                     onOpenLines={() => setLinesGame(detailGame)}
                     access={access}

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { emptyGameLines, validateGameLines, assignedPlayerIds } from './gameLines.js';
+import { emptyGameLines, validateGameLines, assignedPlayerIds } from '../src/utils/gameLines.js';
 
 test('new games have independent blank lines', () => {
     const first = emptyGameLines();
